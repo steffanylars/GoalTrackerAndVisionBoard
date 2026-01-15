@@ -1,0 +1,9 @@
+{
+  "default_pomodoro_minutes": 25,
+  "default_break_minutes": 5,
+  "long_break_minutes": 15,
+  "pomodoros_before_long_break": 4,
+  "sound_enabled": true,
+  "theme": "dark",
+  "notification_enabled": true
+}
