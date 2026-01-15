@@ -328,3 +328,4 @@ VALID_GOAL_TYPES = ["pomodoro", "time", "sessions"]
 
 # Tipos de sesión válidos
 VALID_SESSION_TYPES = ["pomodoro", "custom"]
+

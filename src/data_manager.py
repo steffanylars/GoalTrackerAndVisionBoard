@@ -4,7 +4,7 @@ data_manager.py - Módulo de persistencia de datos JSON
 Este módulo maneja todas las operaciones CRUD para los archivos JSON.
 Garantiza que los datos nunca se pierdan y se actualicen de forma segura.
 
-Autor: Flow Team (O SEAAA, yo, steff jaja)
+Autor: Focus Flow Team
 """
 
 import json
@@ -15,7 +15,9 @@ from typing import Optional, List, Dict, Any
 from pathlib import Path
 
 
-# <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 CONFIGURACIÓN DE RUTAS
+# ============================================================================
+# CONFIGURACIÓN DE RUTAS
+# ============================================================================
 
 # Obtener el directorio base del proyecto
 BASE_DIR = Path(__file__).parent.parent
@@ -27,7 +29,9 @@ SESSIONS_FILE = DATA_DIR / "sessions.json"
 SETTINGS_FILE = DATA_DIR / "settings.json"
 
 
-# <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 FUNCIONES DE INICIALIZACIÓN
+# ============================================================================
+# FUNCIONES DE INICIALIZACIÓN
+# ============================================================================
 
 def ensure_data_directory():
     """
@@ -70,7 +74,9 @@ def initialize_all_files():
     })
 
 
-# <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 FUNCIONES DE LECTURA (READ)
+# ============================================================================
+# FUNCIONES DE LECTURA (READ)
+# ============================================================================
 
 def read_json_file(filepath: Path) -> Any:
     """
@@ -185,7 +191,9 @@ def get_sessions_by_month(year: int, month: int) -> List[Dict]:
     return [s for s in sessions if s.get('date', '').startswith(month_prefix)]
 
 
-# <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 FUNCIONES DE ESCRITURA (WRITE)
+# ============================================================================
+# FUNCIONES DE ESCRITURA (WRITE)
+# ============================================================================
 
 def write_json_file(filepath: Path, data: Any):
     """
@@ -219,7 +227,9 @@ def write_json_file(filepath: Path, data: Any):
         raise e
 
 
-# <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 FUNCIONES DE PROYECTOS (CRUD)
+# ============================================================================
+# FUNCIONES DE PROYECTOS (CRUD)
+# ============================================================================
 
 def create_project(
     name: str,
@@ -317,7 +327,9 @@ def delete_project(project_id: str) -> bool:
     return False
 
 
-# <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 FUNCIONES DE SESIONES (CRUD)
+# ============================================================================
+# FUNCIONES DE SESIONES (CRUD)
+# ============================================================================
 
 def create_session(
     project_id: str,
@@ -386,7 +398,9 @@ def delete_session(session_id: str) -> bool:
     return False
 
 
-# <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 FUNCIONES DE CÁLCULO Y AGREGACIÓN
+# ============================================================================
+# FUNCIONES DE CÁLCULO Y AGREGACIÓN
+# ============================================================================
 
 def calculate_daily_progress(target_date: str = None) -> Dict:
     """
@@ -533,7 +547,50 @@ def get_daily_activity_for_month(year: int, month: int) -> Dict[str, int]:
     
     return activity
 
-# <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 INICIALIZACIÓN PARA IMPORTAR
+
+def get_sessions_by_year(year: int) -> List[Dict]:
+    """
+    Obtiene todas las sesiones de un año específico.
+    
+    Args:
+        year: Año (ej: 2024)
+        
+    Returns:
+        Lista de sesiones del año
+    """
+    sessions = get_all_sessions()
+    year_prefix = f"{year}-"
+    return [s for s in sessions if s.get('date', '').startswith(year_prefix)]
+
+
+def get_year_activity_by_project(year: int) -> Dict[str, set]:
+    """
+    Obtiene los días con actividad para cada proyecto en un año.
+    
+    Args:
+        year: Año
+        
+    Returns:
+        Diccionario {project_id: set(fechas_con_actividad)}
+    """
+    sessions = get_sessions_by_year(year)
+    
+    activity = {}
+    for session in sessions:
+        project_id = session.get('project_id')
+        date_str = session.get('date')
+        
+        if project_id and date_str:
+            if project_id not in activity:
+                activity[project_id] = set()
+            activity[project_id].add(date_str)
+    
+    return activity
+
+
+# ============================================================================
+# INICIALIZACIÓN AL IMPORTAR
+# ============================================================================
 
 # Asegurar que los archivos existen al importar el módulo
 initialize_all_files()

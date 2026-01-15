@@ -91,6 +91,7 @@ def inject_custom_css():
             margin-top: 0.5rem;
         }
         
+        
         /* Project Card */
         .project-card {
             background: var(--bg-secondary);
@@ -328,7 +329,6 @@ def inject_custom_css():
         /* OCULTAR ELEMENTOS DEFAULT */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-        header {visibility: hidden;}
         
         /* RESPONSIVE */
         @media (max-width: 768px) {

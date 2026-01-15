@@ -1,5 +1,5 @@
 """
-app.py - Focus Flow: Goal & Focus Tracker
+app.py - Flow: Goal & Focus Tracker
 
 Aplicación principal de Streamlit - Versión Interactiva Completa.
 Una herramienta elegante para tracking de metas y sesiones de enfoque.
@@ -10,12 +10,14 @@ contacto:
     instragram - steffanylars
     linkedin - steffanylars
 
-Versión: 2.1.0
+Versión: 3.0.0 - Con Year Tracker
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+import calendar
 import pandas as pd
 
 # Importar módulos locales
@@ -36,6 +38,7 @@ from src.data_manager import (
     calculate_project_progress,
     get_daily_activity_for_month,
     get_project_by_id,
+    get_year_activity_by_project,
 )
 from src.visualizations import (
     create_progress_ring,
@@ -91,6 +94,7 @@ def init_session_state():
         'selected_month': date.today().month,
         'selected_color': "#ff7eb6",
         'confirm_delete': None,
+        'year_tracker_year': date.today().year,
     }
     
     for key, value in defaults.items():
@@ -131,6 +135,7 @@ def render_sidebar():
             "projects": "Proyectos", 
             "timer": "Focus Timer",
             "monthly": "Vista Mensual",
+            "year_tracker": "Metas Anuales",
         }
         
         selected = st.radio(
@@ -145,7 +150,6 @@ def render_sidebar():
             st.session_state.current_view = selected
             st.rerun()
         
-        st.divider()
         
         # Resumen rápido
         daily = calculate_daily_progress()
@@ -168,18 +172,9 @@ def render_sidebar():
 
         st.divider()
 
-
-
-        # Logo y título
+        # Créditos
         st.markdown("""
         <div style="text-align: center; padding: 1rem 0 2rem 0;">
-            <h1 style="
-                font-size: 1.8rem;
-                background: linear-gradient(135deg, #ff7eb6, #b8a9ff);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                margin: 0;
-            "></h1>
             <p style="color: #6b6b6b; font-size: 0.85rem; margin-top: 0.5rem;">
                 Powered by Steff 
             </p>
@@ -318,7 +313,6 @@ def render_projects():
             border: 2px dashed #2a2a2a;
             margin-top: 2rem;
         ">
-            <p style="font-size: 3rem; margin-bottom: 1rem;">📁</p>
             <p style="color: #fafafa; font-size: 1.1rem; margin-bottom: 0.5rem;">
                 No tienes proyectos aún
             </p>
@@ -489,7 +483,7 @@ def render_project_card(project: dict):
 def render_timer():
     """Renderiza la vista del timer/pomodoro."""
     
-    st.markdown("# ⏱️ Focus Timer")
+    st.markdown("# Focus Timer")
     st.markdown("*Mantén tu enfoque con el método Pomodoro*")
     st.markdown("")
     
@@ -807,6 +801,278 @@ def render_monthly():
         st.metric("Racha", monthly_stats['active_days'])
 
 
+# <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 VISTA: YEAR TRACKER (365 días)
+
+@st.cache_data(ttl=60)
+def build_year_tracker_data(year: int, projects: tuple):
+    """
+    Construye los datos para el Year Tracker.
+    Usa cache para mejorar rendimiento.
+    
+    Args:
+        year: Año a visualizar
+        projects: Tupla de proyectos (para cache key)
+        
+    Returns:
+        Diccionario con datos del tracker
+    """
+    # Obtener actividad por proyecto
+    activity = get_year_activity_by_project(year)
+    
+    # Calcular días en el año
+    days_in_year = 366 if calendar.isleap(year) else 365
+    
+    # Generar todas las fechas del año
+    start_date = date(year, 1, 1)
+    all_dates = [start_date + timedelta(days=i) for i in range(days_in_year)]
+    
+    # Calcular posiciones de meses para headers
+    month_positions = []
+    current_month = 0
+    for i, d in enumerate(all_dates):
+        if d.month != current_month:
+            current_month = d.month
+            month_positions.append((i, d.strftime('%b')))
+    
+    return {
+        'activity': activity,
+        'all_dates': all_dates,
+        'days_in_year': days_in_year,
+        'month_positions': month_positions
+    }
+
+
+def render_year_tracker():
+    """
+    Renderiza el Year Tracker con grid de 365 días.
+    Cada fila es un proyecto, cada columna es un día.
+    Las celdas se colorean con el color del proyecto si hay actividad.
+    """
+    
+    st.markdown("# Rastreador de Metas (Anual)")
+    st.markdown("*Visualiza tu consistencia a lo largo del año*")
+    st.markdown("")
+    
+    # Selector de año
+    current_year = date.today().year
+    year_options = list(range(current_year - 2, current_year + 2))
+    
+    selected_year = st.selectbox(
+        "Seleccionar año",
+        options=year_options,
+        index=year_options.index(st.session_state.year_tracker_year),
+        key="year_tracker_select"
+    )
+    st.session_state.year_tracker_year = selected_year
+    
+    st.divider()
+    
+    # Obtener proyectos
+    projects = get_all_projects()
+    
+    if not projects:
+        st.info("No hay proyectos. Crea uno para ver tu tracker anual aquí.")
+        if st.button("Crear proyecto", type="primary"):
+            st.session_state.current_view = "projects"
+            st.session_state.show_new_project_form = True
+            st.rerun()
+        return
+    
+    # Construir datos (con cache)
+    projects_tuple = tuple((p['id'], p['name'], p.get('color', '#ff7eb6')) for p in projects)
+    tracker_data = build_year_tracker_data(selected_year, projects_tuple)
+    
+    activity = tracker_data['activity']
+    all_dates = tracker_data['all_dates']
+    days_in_year = tracker_data['days_in_year']
+    month_positions = tracker_data['month_positions']
+    
+    # Calcular estadísticas por proyecto
+    st.markdown("### Resumen del Año")
+    
+    cols = st.columns(min(len(projects), 4))
+    for i, project in enumerate(projects[:4]):
+        project_dates = activity.get(project['id'], set())
+        days_active = len(project_dates)
+        percentage = round((days_active / days_in_year) * 100, 1)
+        
+        with cols[i % 4]:
+            st.markdown(f"""
+            <div style="
+                background: #1a1a1a;
+                border-radius: 12px;
+                padding: 1rem;
+                border-left: 4px solid {project.get('color', '#ff7eb6')};
+                margin-bottom: 1rem;
+            ">
+                <p style="color: #fafafa; font-weight: 600; margin: 0;">{project['name']}</p>
+                <p style="color: {project.get('color', '#ff7eb6')}; font-size: 1.5rem; font-weight: 700; margin: 0.25rem 0;">
+                    {days_active} días
+                </p>
+                <p style="color: #6b6b6b; font-size: 0.85rem; margin: 0;">
+                    {percentage}% del año
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+    st.divider()
+
+
+    st.markdown("### Calendario Anual")
+
+    # --------- CONFIG ---------
+    cell_size = 12
+    gap = 2
+    label_width = 150
+
+    # all_dates ya existe (viene de tracker_data)
+    # activity ya existe (viene de tracker_data)
+    # days_in_year ya existe (viene de tracker_data)
+
+    # ====== Header: números del día del año ======
+    # Para que no se vea una pared de números, ponemos marcas cada N días
+    tick_every = 10  #densidad
+
+    header_cells = []
+    for i in range(days_in_year):
+        day_num = i + 1
+        if day_num == 1 or day_num % tick_every == 0:
+            # mostramos el número como "mini label" arriba
+            header_cells.append(
+                f'<div class="day-header" title="Day {day_num}">{day_num}</div>'
+            )
+        else:
+            header_cells.append('<div class="day-header empty"></div>')
+
+    # ====== Grid por proyecto ======
+    rows_html = []
+    for project in projects:
+        pid = project["id"]
+        pname = project.get("name", "Proyecto")
+        pcolor = project.get("color", "#ff7eb6")
+        active_days = activity.get(pid, set())
+
+        cells = []
+        for d in all_dates:
+            ds = d.isoformat()
+            if ds in active_days:
+                # lleno (con color)
+                cells.append(
+                    f'<div class="day-cell filled" '
+                    f'style="background:{pcolor}; border-color:{pcolor}66;" '
+                    f'title="{pname} • Day {d.timetuple().tm_yday} • {ds} • Logged"></div>'
+                )
+            else:
+                # vacío (pero visibl)
+                cells.append(
+                    f'<div class="day-cell empty" '
+                    f'title="{pname} • Day {d.timetuple().tm_yday} • {ds} • No activity"></div>'
+                )
+
+        rows_html.append(f"""
+          <div class="project-row">
+            <div class="project-label" title="{pname}">{pname}</div>
+            <div class="days-container">{''.join(cells)}</div>
+          </div>
+        """)
+
+    html = f"""
+    <style>
+      .year-tracker-container {{
+        overflow-x: auto;
+        width: 100%;
+        padding: 10px 0 14px 0;
+      }}
+      .year-tracker-grid {{
+        display: inline-block;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        width: max-content;
+      }}
+
+      /* Header con números del día del año */
+      .day-header-row {{
+        display: flex;
+        align-items: flex-end;
+        margin-left: {label_width+9}px;
+        margin-bottom: 6px;
+        gap: {gap}px;
+      }}
+      .day-header {{
+        width: {cell_size}px;
+        min-width: {cell_size}px;
+        height: 16px;
+        font-size: 9px;
+        color: #6b6b6b;
+        line-height: 16px;
+        text-align: center;
+        user-select: none;
+      }}
+      .day-header.empty {{
+        color: transparent;
+      }}
+      /* Filas */
+      .project-row {{
+        display: flex;
+        align-items: center;
+        margin-bottom: {gap}px;
+      }}
+      .project-label {{
+        width: {label_width}px;
+        min-width: {label_width}px;
+        color: #fafafa;
+        font-size: 12px;
+        font-weight: 500;
+        padding-right: 10px;
+        text-align: right;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }}
+      .days-container {{
+        display: flex;
+        gap: {gap}px;
+      }}
+
+      /* Celdas */
+      .day-cell {{
+        width: {cell_size}px;
+        height: {cell_size}px;
+        border-radius: 2px;
+        flex: 0 0 auto;
+        border: 1px solid rgba(255,255,255,0.10); /* visible aunque esté vacío */
+        background: rgba(255,255,255,0.03);       /* fondo leve para “cuadrito vacío” */
+        box-sizing: border-box;
+      }}
+      .day-cell.empty {{
+        background: rgba(255,255,255,0.02);
+        border-color: rgba(255,255,255,0.08);
+      }}
+      .day-cell.filled {{
+        opacity: 0.92;
+      }}
+      .day-cell.filled:hover {{
+        opacity: 1;
+        transform: scale(1.25);
+        z-index: 10;
+      }}
+    </style>
+
+    <div class="year-tracker-container">
+      <div class="year-tracker-grid">
+
+        <div class="day-header-row">
+          {''.join(header_cells)}
+        </div>
+
+        {''.join(rows_html)}
+
+      </div>
+    </div>
+    """
+
+    # Importante: render HTML real (evita que se “imprima” el código)
+    components.html(html, height=420, scrolling=True)
+
+
 # <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 <3 AGREGAR SESIÓN MANUAL
 
 def render_add_session_form():
@@ -850,6 +1116,8 @@ def render_add_session_form():
                     session_date=session_date.isoformat()
                 )
                 st.success("Sesión agregada!")
+                # Limpiar cache del year tracker
+                build_year_tracker_data.clear()
                 time.sleep(0.5)
                 st.rerun()
 
@@ -873,6 +1141,8 @@ def main():
         render_add_session_form()
     elif st.session_state.current_view == "monthly":
         render_monthly()
+    elif st.session_state.current_view == "year_tracker":
+        render_year_tracker()
     else:
         render_dashboard()
 

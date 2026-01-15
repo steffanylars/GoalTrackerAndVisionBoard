@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "id": "810afd15-4cee-4c54-902c-47d068316f86",
+    "project_id": "7617eba4-e7ae-4b4f-8345-36d007f1e28c",
+    "date": "2026-01-15",
+    "minutes": 25,
+    "pomodoros": 1,
+    "session_type": "pomodoro",
+    "created_at": "2026-01-15T15:50:53.685482"
+  }
+]

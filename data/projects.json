@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "id": "1086b2ed-2c24-4c76-b954-ecd5b87a952d",
+    "name": "Estudio de Alemán",
+    "color": "#ff7eb6",
+    "goal_type": "sessions",
+    "monthly_goal": 31,
+    "created_at": "2026-01-15"
+  },
+  {
+    "id": "a05e5c1d-fba2-4367-9078-772b838f6a94",
+    "name": "Ruso",
+    "color": "#b8a9ff",
+    "goal_type": "sessions",
+    "monthly_goal": 31,
+    "created_at": "2026-01-15"
+  },
+  {
+    "id": "7617eba4-e7ae-4b4f-8345-36d007f1e28c",
+    "name": "Cursos Extracurriculares",
+    "color": "#ffb86c",
+    "goal_type": "time",
+    "monthly_goal": 1860,
+    "created_at": "2026-01-15"
+  },
+  {
+    "id": "79e35b80-7b19-4938-83b7-6ad05371d8c1",
+    "name": "TOEFL",
+    "color": "#7ee8fa",
+    "goal_type": "sessions",
+    "monthly_goal": 31,
+    "created_at": "2026-01-15"
+  },
+  {
+    "id": "f49aac18-c63e-4bcc-836b-8ba9d2126dc6",
+    "name": "WBC",
+    "color": "#98d8aa",
+    "goal_type": "sessions",
+    "monthly_goal": 20,
+    "created_at": "2026-01-15"
+  }
+]
