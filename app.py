@@ -145,8 +145,6 @@ def render_sidebar():
             st.session_state.current_view = selected
             st.rerun()
         
-        st.divider()
-        
         # Resumen rápido
         daily = calculate_daily_progress()
         st.markdown(f"""
@@ -166,11 +164,7 @@ def render_sidebar():
         </div>
         """, unsafe_allow_html=True)
 
-        st.divider()
-
-
-
-        # Logo y título
+        # yooo
         st.markdown("""
         <div style="text-align: center; padding: 1rem 0 2rem 0;">
             <h1 style="
