@@ -2,7 +2,7 @@
 visualizations.py - Visualizaciones tipo Apple Watch y GitHub
 
 Este módulo contiene funciones para crear:
-- Círculos de progreso estilo Apple Watch Activity Rings
+- Círculos de progreso estilo Apple Watch Activity Ringsss de Health
 - Heatmap de actividad estilo GitHub Contributions
 
 Autor: Focus Flow Team
